@@ -1,0 +1,99 @@
+{
+  "project_info": {
+    "project_number": "803956275515",
+    "firebase_url": "https://pettakecareremake-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "pettakecareremake",
+    "storage_bucket": "pettakecareremake.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:803956275515:android:9d9c8aa8ae40a919efdf1e",
+        "android_client_info": {
+          "package_name": "com.example.flutter_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "803956275515-6n1frkia3ogmcs55ni1tjie7jerch1bu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEyxT2TTPKsfvilWSaSxDUK6BmSRyP7BE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "803956275515-6n1frkia3ogmcs55ni1tjie7jerch1bu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "803956275515-5mmfuu67olb7i7mee84po1l6iuij0boe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pettakecare.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:803956275515:android:994d17e0c51bd8e9efdf1e",
+        "android_client_info": {
+          "package_name": "com.example.pettakecare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "803956275515-5jlnomcnncoaj1l801hbogkfuco6nott.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pettakecare",
+            "certificate_hash": "c964df6b295fd0dd7b9b97989b372fbc996eaa10"
+          }
+        },
+        {
+          "client_id": "803956275515-sq4d7idj9h3l97qrib3e783qrqoe1euo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pettakecare",
+            "certificate_hash": "05fa0611fd1ee3bd9f6d5b19fab9162defe483b1"
+          }
+        },
+        {
+          "client_id": "803956275515-6n1frkia3ogmcs55ni1tjie7jerch1bu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEyxT2TTPKsfvilWSaSxDUK6BmSRyP7BE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "803956275515-6n1frkia3ogmcs55ni1tjie7jerch1bu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "803956275515-5mmfuu67olb7i7mee84po1l6iuij0boe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pettakecare.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
