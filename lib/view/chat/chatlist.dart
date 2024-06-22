@@ -28,6 +28,7 @@ class UserListView extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => ChatScreen(
                         chatUserId: userDoc.id,
+                        
                       ),
                     ),
                   );

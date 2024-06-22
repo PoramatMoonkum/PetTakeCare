@@ -69,6 +69,7 @@ dependencies:
   agora_rtc_engine: ^6.3.2
   file_picker: ^8.0.5
   logger: ^2.3.0
+  flutter_webrtc: ^0.11.1
 
 flutter_icons:
   android: true

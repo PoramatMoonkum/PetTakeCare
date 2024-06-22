@@ -6,7 +6,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pettakecare/view/chat/video_call.dart';
 import 'package:uuid/uuid.dart';
+
 
 class ChatScreen extends StatefulWidget {
   final String chatUserId;
@@ -36,8 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _chatRoomId = _getChatRoomId(_currentUserId!, widget.chatUserId);
     } else {
       // Handle the case when the user is not logged in
-      // For example, navigate to the login screen or show an error message
-      Navigator.of(context).pushReplacementNamed('/login'); // Example navigation to login screen
+      Navigator.of(context).pushReplacementNamed('/login');
     }
   }
 
@@ -86,11 +87,23 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _startVideoCall() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => VideoCallScreen(chatRoomId: _chatRoomId),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.video_call),
+            onPressed: _startVideoCall,
+          ),
+        ],
       ),
       body: Column(
         children: [
