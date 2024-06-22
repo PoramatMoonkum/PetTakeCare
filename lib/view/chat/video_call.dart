@@ -21,92 +21,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   void initState() {
     super.initState();
     _initializeRenderers();
-    _startCall();
-    _listenForRemoteDescription();
-  }
-
-  Future<void> _initializeRenderers() async {
-    await _localRenderer.initialize();
-    await _remoteRenderer.initialize();
-  }
-
-  Future<void> _startCall() async {
-    _localStream = await _getUserMedia();
-    _localRenderer.srcObject = _localStream;
-
-    _peerConnection = await _createPeerConnection();
-    _peerConnection.addStream(_localStream);
-
-    _peerConnection.onIceCandidate = (candidate) {
-      if (candidate != null) {
-        _sendSignalingData(candidate.toMap());
-      }
-    };
-
-    _peerConnection.onAddStream = (stream) {
-      _remoteRenderer.srcObject = stream;
-    };
-
-    final offer = await _peerConnection.createOffer();
-    await _peerConnection.setLocalDescription(offer);
-    _sendSignalingData(offer.toMap());
-  }
-
-  Future<MediaStream> _getUserMedia() async {
-    final mediaConstraints = {
-      'audio': true,
-      'video': {'facingMode': 'user'},
-    };
-
-    return await navigator.mediaDevices.getUserMedia(mediaConstraints);
-  }
-
-  Future<RTCPeerConnection> _createPeerConnection() async {
-    final configuration = {
-      'iceServers': [
-        {'url': 'stun:stun.l.google.com:19302'},
-      ],
-    };
-
-    return await createPeerConnection(configuration);
-  }
-
-  void _sendSignalingData(Map<String, dynamic> data) {
-    FirebaseFirestore.instance
-        .collection('chat_rooms')
-        .doc(widget.chatRoomId)
-        .collection('video_call')
-        .add(data);
-  }
-
-  Future<void> _listenForRemoteDescription() async {
-    FirebaseFirestore.instance
-        .collection('chat_rooms')
-        .doc(widget.chatRoomId)
-        .collection('video_call')
-        .snapshots()
-        .listen((snapshot) async {
-      for (var doc in snapshot.docs) {
-        if (doc.data().containsKey('sdp') && doc.data().containsKey('type')) {
-          final remoteDescription = RTCSessionDescription(
-            doc.data()['sdp'],
-            doc.data()['type'],
-          );
-          await _peerConnection.setRemoteDescription(remoteDescription);
-          if (doc.data()['type'] == 'offer') {
-            final answer = await _peerConnection.createAnswer();
-            await _peerConnection.setLocalDescription(answer);
-            _sendSignalingData(answer.toMap());
-          }
-        } else if (doc.data().containsKey('candidate')) {
-          final candidate = RTCIceCandidate(
-            doc.data()['candidate'],
-            doc.data()['sdpMid'],
-            doc.data()['sdpMLineIndex'],
-          );
-          await _peerConnection.addCandidate(candidate);
-        }
-      }
+    _createPeerConnection().then((pc) {
+      _peerConnection = pc;
+      _createOffer();
+      _listenForRemoteDescription();
     });
   }
 
@@ -115,8 +33,119 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     _localRenderer.dispose();
     _remoteRenderer.dispose();
     _peerConnection.close();
-    _localStream.dispose();
     super.dispose();
+  }
+
+  Future<void> _initializeRenderers() async {
+    await _localRenderer.initialize();
+    await _remoteRenderer.initialize();
+  }
+
+  Future<RTCPeerConnection> _createPeerConnection() async {
+    final configuration = <String, dynamic>{
+      'iceServers': [
+        {'urls': 'stun:stun.l.google.com:19302'},
+      ],
+    };
+
+    final pc = await createPeerConnection(configuration);
+
+    _localStream = await navigator.mediaDevices.getUserMedia({
+      'audio': true,
+      'video': true,
+    });
+
+    _localStream.getTracks().forEach((track) {
+      pc.addTrack(track, _localStream);
+    });
+
+    pc.onIceCandidate = (candidate) {
+      // ส่ง candidate ไปยัง remote peer ผ่าน signaling server
+      if (candidate != null) {
+        FirebaseFirestore.instance
+            .collection('rooms')
+            .doc(widget.chatRoomId)
+            .collection('candidates')
+            .add(candidate.toMap());
+      }
+    };
+
+    pc.onTrack = (event) {
+      if (event.track.kind == 'video') {
+        setState(() {
+          _remoteRenderer.srcObject = event.streams[0];
+        });
+      }
+    };
+
+    setState(() {
+      _localRenderer.srcObject = _localStream;
+    });
+
+    return pc;
+  }
+
+  void _createOffer() async {
+    final offer = await _peerConnection.createOffer();
+    await _peerConnection.setLocalDescription(offer);
+
+    // บันทึก offer ไปยัง Firestore
+    FirebaseFirestore.instance.collection('rooms').doc(widget.chatRoomId).set({
+      'offer': {
+        'type': offer.type,
+        'sdp': offer.sdp,
+      },
+    });
+  }
+
+  void _createAnswer() async {
+    final answer = await _peerConnection.createAnswer();
+    await _peerConnection.setLocalDescription(answer);
+
+    // บันทึก answer ไปยัง Firestore
+    FirebaseFirestore.instance.collection('rooms').doc(widget.chatRoomId).update({
+      'answer': {
+        'type': answer.type,
+        'sdp': answer.sdp,
+      },
+    });
+  }
+
+  void _setRemoteDescription(Map<String, dynamic> description) async {
+    final sdp = RTCSessionDescription(description['sdp'], description['type']);
+    await _peerConnection.setRemoteDescription(sdp);
+  }
+
+  void _listenForRemoteDescription() {
+    FirebaseFirestore.instance.collection('rooms').doc(widget.chatRoomId).snapshots().listen((snapshot) {
+      if (snapshot.exists) {
+        final data = snapshot.data()!;
+        if (data.containsKey('offer')) {
+          _setRemoteDescription(data['offer']);
+          _createAnswer(); // ถ้าเจอ offer ก็สร้าง answer
+        }
+        if (data.containsKey('answer')) {
+          _setRemoteDescription(data['answer']);
+        }
+      }
+    });
+
+    FirebaseFirestore.instance
+        .collection('rooms')
+        .doc(widget.chatRoomId)
+        .collection('candidates')
+        .snapshots()
+        .listen((snapshot) {
+      snapshot.docChanges.forEach((change) {
+        if (change.type == DocumentChangeType.added) {
+          _peerConnection.addCandidate(RTCIceCandidate(
+            change.doc['candidate'],
+            change.doc['sdpMid'],
+            change.doc['sdpMLineIndex'],
+          ));
+        }
+      });
+    });
   }
 
   @override
@@ -128,14 +157,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       body: Column(
         children: [
           Expanded(
-            child: RTCVideoView(_remoteRenderer),
+            child: RTCVideoView(_localRenderer),
           ),
           Expanded(
-            child: Container(
-              width: 100,
-              height: 150,
-              child: RTCVideoView(_localRenderer, mirror: true),
-            ),
+            child: RTCVideoView(_remoteRenderer),
           ),
         ],
       ),
